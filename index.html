@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Betegn Laundry - Management System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🧺</div>
+    <h1>Betegn Laundry</h1>
+    <p class="login-sub">Management System</p>
+    <form id="loginForm" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter username" required/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password" required/>
+      </div>
+      <div id="loginError" class="login-error" style="display:none"></div>
+      <button type="submit" class="btn btn-primary btn-full">Login</button>
+    </form>
+    <p class="login-hint">Default: admin / admin123</p>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">🧺</div>
+      <div>
+        <h2>Betegn<br><span>Laundry</span></h2>
+        <small id="userBadge" class="user-badge"></small>
+      </div>
+    </div>
+    <nav>
+      <a href="#" class="nav-link active" data-section="dashboard"><span class="icon">📊</span> Dashboard</a>
+      <a href="#" class="nav-link" data-section="register"><span class="icon">➕</span> New Order</a>
+      <a href="#" class="nav-link" data-section="orders"><span class="icon">📋</span> Orders</a>
+      <a href="#" class="nav-link" data-section="payments"><span class="icon">💰</span> Payments</a>
+      <a href="#" class="nav-link" data-section="customers"><span class="icon">👥</span> Customers</a>
+      <a href="#" class="nav-link" data-section="reports"><span class="icon">📈</span> Reports</a>
+      <a href="#" class="nav-link" data-section="search"><span class="icon">🔍</span> Search</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <button class="menu-toggle" id="menuToggle">☰</button>
+
+  <!-- Main Content -->
+  <div class="main" id="main">
+
+    <!-- Notification bar -->
+    <div id="notifBar" class="notif-bar" style="display:none"></div>
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="dashboard">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p id="currentDate"></p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info"><h3 id="totalCustomers">0</h3><p>Total Customers</p></div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-icon">👕</div>
+          <div class="stat-info"><h3 id="totalClothes">0</h3><p>Clothes Received</p></div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info"><h3 id="completedOrders">0</h3><p>Completed Orders</p></div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info"><h3 id="pendingOrders">0</h3><p>Pending Orders</p></div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">💵</div>
+          <div class="stat-info"><h3 id="dailyIncome">0 ETB</h3><p>Today's Income</p></div>
+        </div>
+      </div>
+      <div class="recent-orders">
+        <div class="card-header-row">
+          <h2>Recent Orders</h2>
+          <button class="btn btn-sm btn-outline" onclick="loadDashboard()">🔄 Refresh</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody id="recentTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW ORDER -->
+    <section class="section" id="register">
+      <div class="page-header"><h1>New Order</h1></div>
+      <div class="form-card">
+        <h2>Customer Information</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Customer Name *</label>
+            <input type="text" id="custName" placeholder="Full name"/>
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" id="custPhone" placeholder="09xxxxxxxx"/>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" id="custAddress" placeholder="Optional"/>
+          </div>
+          <div class="form-group">
+            <label>Order ID</label>
+            <input type="text" id="orderId" readonly/>
+          </div>
+          <div class="form-group">
+            <label>Date Received</label>
+            <input type="date" id="dateReceived"/>
+          </div>
+          <div class="form-group">
+            <label>Delivery Date</label>
+            <input type="date" id="deliveryDate"/>
+          </div>
+        </div>
+
+        <h2>Laundry Items</h2>
+        <div class="items-table-wrapper">
+          <table class="items-table">
+            <thead>
+              <tr><th>Item Type</th><th>Quantity</th><th>Price/Item (ETB)</th><th>Total (ETB)</th><th></th></tr>
+            </thead>
+            <tbody id="itemsBody">
+              <tr class="item-row">
+                <td>
+                  <select class="item-type">
+                    <option value="">Select item</option>
+                    <option>Shirt</option><option>Trouser</option><option>Suit</option>
+                    <option>Blanket</option><option>Curtain</option><option>Other</option>
+                  </select>
+                </td>
+                <td><input type="number" class="item-qty" min="1" value="1"/></td>
+                <td><input type="number" class="item-price" min="0" placeholder="0"/></td>
+                <td><span class="item-total">0</span></td>
+                <td><button class="btn-remove" onclick="removeRow(this)">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addItemRow()">+ Add Item</button>
+
+        <div class="order-summary">
+          <div class="summary-row"><span>Subtotal:</span><strong id="subtotalDisplay">0 ETB</strong></div>
+          <div class="form-group">
+            <label>Discount (%)</label>
+            <input type="number" id="discountPct" min="0" max="100" value="0" oninput="updateTotals()"/>
+          </div>
+          <div class="summary-row"><span>Grand Total:</span><strong id="grandTotal">0 ETB</strong></div>
+          <div class="form-group">
+            <label>Paid Amount (ETB)</label>
+            <input type="number" id="paidAmount" min="0" placeholder="0" oninput="updateTotals()"/>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select id="paymentMethod">
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Mobile Money">Mobile Money</option>
+            </select>
+          </div>
+          <div class="summary-row"><span>Remaining Balance:</span><strong id="remainingBalance">0 ETB</strong></div>
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" id="orderNotes" placeholder="Optional notes"/>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveOrder()">💾 Save Order</button>
+          <button class="btn btn-outline" onclick="resetForm()">🔄 Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="section" id="orders">
+      <div class="page-header">
+        <h1>Order Management</h1>
+        <div class="header-actions">
+          <select id="statusFilter" onchange="loadOrders()" class="filter-select">
+            <option value="">All Statuses</option>
+            <option>Received</option><option>Washing</option><option>Ironing</option>
+            <option>Ready</option><option>Delivered</option>
+          </select>
+          <button class="btn btn-sm btn-outline" onclick="loadOrders()">🔄 Refresh</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Delivery</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAYMENTS -->
+    <section class="section" id="payments">
+      <div class="page-header">
+        <h1>Payment Management</h1>
+        <button class="btn btn-sm btn-outline" onclick="loadPayments()">🔄 Refresh</button>
+      </div>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Pay Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="paymentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section class="section" id="customers">
+      <div class="page-header">
+        <h1>Customers</h1>
+        <button class="btn btn-sm btn-outline" onclick="loadCustomers()">🔄 Refresh</button>
+      </div>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Phone</th><th>Address</th><th>Registered</th><th>Total Orders</th><th>Total Paid</th><th>Action</th></tr>
+            </thead>
+            <tbody id="customersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="section" id="reports">
+      <div class="page-header">
+        <h1>Monthly Report</h1>
+        <div class="header-actions">
+          <input type="month" id="reportMonth" onchange="loadReport()"/>
+          <button class="btn btn-sm btn-primary" onclick="exportReportExcel()">📥 Export Excel</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="reportStats"></div>
+      <div class="grid-2">
+        <div class="table-card">
+          <h2 class="card-title">Top Customers</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Spent (ETB)</th></tr></thead>
+              <tbody id="topCustomersBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card">
+          <h2 class="card-title">Items Breakdown</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Revenue (ETB)</th></tr></thead>
+              <tbody id="itemsBreakdownBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="section" id="search">
+      <div class="page-header"><h1>Search Orders</h1></div>
+      <div class="search-card">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search by name, phone, or order ID..." onkeydown="if(event.key==='Enter') performSearch()"/>
+          <button class="btn btn-primary" onclick="performSearch()">🔍 Search</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="searchResults"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ===== RECEIPT MODAL ===== -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal">
+    <div class="receipt" id="receiptContent">
+      <div class="receipt-header">
+        <div class="receipt-logo">🧺</div>
+        <h2>Betegn Laundry</h2>
+        <p>Professional Laundry Services</p>
+        <p>📞 +251 9xx xxx xxxx</p>
+      </div>
+      <hr/>
+      <div id="receiptBody"></div>
+      <hr/>
+      <div class="receipt-footer">
+        <p>Thank you for choosing Betegn Laundry!</p>
+        <p>Please keep this receipt for reference.</p>
+      </div>
+    </div>
+    <div class="modal-actions no-print">
+      <button class="btn btn-primary" onclick="printReceipt()">🖨️ Print</button>
+      <button class="btn btn-outline" onclick="closeModal('receiptModal')">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STATUS MODAL ===== -->
+<div class="modal-overlay" id="statusModal">
+  <div class="modal small-modal">
+    <h2>Update Order Status</h2>
+    <p id="statusOrderId" style="color:var(--text-muted);margin:.5rem 0"></p>
+    <div class="status-options">
+      <button class="status-btn received"  onclick="setStatus('Received')">📥 Received</button>
+      <button class="status-btn washing"   onclick="setStatus('Washing')">🫧 Washing</button>
+      <button class="status-btn ironing"   onclick="setStatus('Ironing')">🔥 Ironing</button>
+      <button class="status-btn ready"     onclick="setStatus('Ready')">✅ Ready</button>
+      <button class="status-btn delivered" onclick="setStatus('Delivered')">🚚 Delivered</button>
+    </div>
+    <button class="btn btn-outline" style="margin-top:1rem;width:100%" onclick="closeModal('statusModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== PAYMENT MODAL ===== -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal small-modal">
+    <h2>Add Payment</h2>
+    <p id="payModalOrderId" style="color:var(--text-muted);margin:.5rem 0"></p>
+    <div id="payModalInfo" style="margin-bottom:1rem"></div>
+    <div class="form-group" style="margin-bottom:.75rem">
+      <label>Amount (ETB)</label>
+      <input type="number" id="payModalAmount" min="1" placeholder="0"/>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Payment Method</label>
+      <select id="payModalMethod">
+        <option value="Cash">Cash</option>
+        <option value="Bank Transfer">Bank Transfer</option>
+        <option value="Mobile Money">Mobile Money</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitPayment()">💳 Pay</button>
+      <button class="btn btn-outline" onclick="closeModal('paymentModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CUSTOMER HISTORY MODAL ===== -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal large-modal">
+    <h2>Customer History</h2>
+    <div id="historyContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('historyModal')">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
