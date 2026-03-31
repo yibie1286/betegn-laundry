@@ -4,7 +4,7 @@
    Falls back to localStorage when backend is unavailable
    ============================================================ */
 
-const API = '';  // same origin
+const API = ''; // same origin — backend serves the frontend
 let currentUser = null;
 let currentStatusOrderId = null;
 let currentPayOrderId = null;
@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ===== SESSION =====
 async function checkSession() {
   try {
-    const res = await fetch(`${API}/api/me`);
+    const res = await fetch(`${API}/api/me`, { credentials: 'include' });
     if (res.ok) {
       currentUser = await res.json();
       showApp();
@@ -77,6 +77,7 @@ async function doLogin(e) {
   try {
     const res = await fetch(`${API}/api/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username, password })
     });
     const data = await res.json();
@@ -91,7 +92,7 @@ async function doLogin(e) {
 
 async function doLogout() {
   if (!useLocalStorage) {
-    try { await fetch(`${API}/api/logout`, { method: 'POST' }); } catch {}
+    try { await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' }); } catch {}
   }
   localStorage.removeItem('bl_user');
   currentUser = null;
@@ -130,6 +131,7 @@ function showToast(msg, type = 'info') {
 async function apiFetch(url, options = {}) {
   const res = await fetch(API + url, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     ...options
   });
   const data = await res.json();
