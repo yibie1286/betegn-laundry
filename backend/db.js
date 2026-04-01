@@ -9,7 +9,9 @@ const pool = mysql.createPool({
   port:             process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit:  10,
-  queueLimit:       0
+  queueLimit:       0,
+  // SSL only when DB_SSL=true (e.g. Aiven). Local MySQL uses no SSL.
+  ...(process.env.DB_SSL === 'true' && { ssl: { rejectUnauthorized: false } })
 });
 
 module.exports = pool;
