@@ -31,9 +31,13 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 8 * 60 * 60 * 1000
+    maxAge: 8 * 60 * 60 * 1000,
+    httpOnly: true
   }
 }));
+
+// Trust Render's proxy
+app.set('trust proxy', 1);
 
 // Auth middleware
 function requireAuth(req, res, next) {
