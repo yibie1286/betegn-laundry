@@ -32,15 +32,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ===== SESSION =====
 async function checkSession() {
   try {
-    const res = await fetch(`${API}/api/me`, { credentials: 'include' });
-    if (res.ok) {
-      currentUser = await res.json();
-      showApp();
-    } else {
-      showLogin();
-    }
+    const token = localStorage.getItem('bl_token');
+    if (!token) { showLogin(); return; }
+    const res = await fetch(`${API}/api/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) { currentUser = await res.json(); showApp(); }
+    else { localStorage.removeItem('bl_token'); showLogin(); }
   } catch {
-    // Backend not available — use localStorage mode
     useLocalStorage = true;
     const saved = localStorage.getItem('bl_user');
     if (saved) { currentUser = JSON.parse(saved); showApp(); }
@@ -82,12 +81,14 @@ async function doLogin(e) {
   try {
     const res = await fetch(`${API}/api/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ username, password })
     });
     const data = await res.json();
-    if (res.ok) { currentUser = data.user; showApp(); }
-    else { errEl.textContent = data.error || 'Login failed'; errEl.style.display = 'block'; }
+    if (res.ok) {
+      currentUser = data.user;
+      localStorage.setItem('bl_token', data.token);
+      showApp();
+    } else { errEl.textContent = data.error || 'Login failed'; errEl.style.display = 'block'; }
   } catch {
     errEl.textContent = 'Cannot connect to server. Using offline mode.';
     errEl.style.display = 'block';
@@ -96,9 +97,11 @@ async function doLogin(e) {
 }
 
 async function doLogout() {
-  if (!useLocalStorage) {
-    try { await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' }); } catch {}
+  const token = localStorage.getItem('bl_token');
+  if (!useLocalStorage && token) {
+    try { await fetch(`${API}/api/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); } catch {}
   }
+  localStorage.removeItem('bl_token');
   localStorage.removeItem('bl_user');
   currentUser = null;
   showLogin();
@@ -135,9 +138,12 @@ function showToast(msg, type = 'info') {
 
 // ===== API HELPER =====
 async function apiFetch(url, options = {}) {
+  const token = localStorage.getItem('bl_token');
   const res = await fetch(API + url, {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    },
     ...options
   });
   const data = await res.json();

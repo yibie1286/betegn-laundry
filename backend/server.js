@@ -1,5 +1,4 @@
 const express  = require('express');
-const session  = require('express-session');
 const cors     = require('cors');
 const path     = require('path');
 require('dotenv').config();
@@ -12,40 +11,30 @@ const reportRoutes   = require('./routes/reports');
 
 const app = express();
 
-// Trust Render's proxy — must be before session
 app.set('trust proxy', 1);
 
-// Serve frontend statically
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// CORS
-app.use(cors({
-  origin: process.env.FRONTEND_URL || true,
-  credentials: true
-}));
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback_secret',
-  resave: true,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,
-    sameSite: 'none',
-    maxAge: 8 * 60 * 60 * 1000,
-    httpOnly: true
-  }
-}));
+// Simple token store (in-memory)
+const tokens = new Map();
+app.locals.tokens = tokens;
 
-// Auth middleware
+// Auth middleware using Bearer token
 function requireAuth(req, res, next) {
-  if (req.session && req.session.user) return next();
+  const auth = req.headers['authorization'];
+  const token = auth && auth.split(' ')[1];
+  if (token && tokens.has(token)) {
+    req.user = tokens.get(token);
+    return next();
+  }
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-// Routes
 app.use('/api', authRoutes);
 app.use('/api/orders',    requireAuth, orderRoutes);
 app.use('/api/payments',  requireAuth, paymentRoutes);
