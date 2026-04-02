@@ -485,19 +485,153 @@ tbody tr:hover { background: #f8fafc; }
 }
 
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  /* Sidebar */
+  .sidebar { transform: translateX(-100%); z-index: 150; }
   .sidebar.open { transform: translateX(0); }
-  .main { margin-left: 0; padding: 1rem; padding-top: 4rem; }
-  .menu-toggle { display: flex; align-items: center; justify-content: center; }
+
+  /* Sidebar backdrop overlay */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 140;
+  }
+  .sidebar-backdrop.active { display: block; }
+
+  /* Menu toggle always on top */
+  .menu-toggle {
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300;
+    width: 44px; height: 44px;
+  }
+
+  /* Main content */
+  .main { margin-left: 0; padding: 1rem; padding-top: 4.5rem; }
+
+  /* Stats */
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .form-grid { grid-template-columns: 1fr; }
+
+  /* Form grids — single column with more spacing */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .form-group { gap: .5rem; }
+
   .order-summary { max-width: 100%; }
   .status-options { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; align-items: flex-start; }
+
+  /* Touch targets — minimum 44px */
+  .btn {
+    min-height: 44px;
+    padding: .65rem 1.4rem;
+  }
+
+  .btn-sm {
+    min-height: 44px;
+    padding: .5rem 1rem;
+    font-size: .88rem;
+  }
+
+  .btn-remove {
+    width: 44px; height: 44px;
+    font-size: 1rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-height: 44px;
+    padding: .65rem .9rem;
+    font-size: 1rem;
+  }
+
+  .filter-select { min-height: 44px; }
+
+  /* Modal spacing */
+  .modal { padding: 1rem; }
+
+  /* Table card rows as cards on mobile */
+  .table-wrapper table thead { display: none; }
+
+  .table-wrapper table tbody tr {
+    display: block;
+    background: var(--card);
+    border-radius: 10px;
+    margin-bottom: .75rem;
+    box-shadow: var(--shadow);
+    padding: .75rem;
+    border: 1px solid var(--border);
+  }
+
+  .table-wrapper table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .4rem .25rem;
+    border-bottom: 1px solid var(--border);
+    white-space: normal;
+    font-size: .88rem;
+  }
+
+  .table-wrapper table tbody td:last-child { border-bottom: none; }
+
+  .table-wrapper table tbody td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: .78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-right: .5rem;
+    flex-shrink: 0;
+  }
+
+  /* Items table as cards too */
+  .items-table thead { display: none; }
+
+  .items-table tbody tr {
+    display: block;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: .5rem;
+    padding: .5rem;
+    border: 1px solid var(--border);
+  }
+
+  .items-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .35rem .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .items-table tbody td:last-child { border-bottom: none; }
+
+  .items-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: .78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-right: .5rem;
+    flex-shrink: 0;
+  }
+
+  .items-table select,
+  .items-table input[type="number"] {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
+  .login-card { padding: 1.5rem 1rem; }
+  .form-actions { flex-direction: column; }
+  .form-actions .btn { width: 100%; }
 }
 
 /* ===== PRINT ===== */
