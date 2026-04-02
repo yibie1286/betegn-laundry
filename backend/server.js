@@ -12,12 +12,15 @@ const reportRoutes   = require('./routes/reports');
 
 const app = express();
 
+// Trust Render's proxy — must be before session
+app.set('trust proxy', 1);
+
 // Serve frontend statically
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// CORS for external frontend deployments
+// CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5500',
+  origin: process.env.FRONTEND_URL || true,
   credentials: true
 }));
 
@@ -26,18 +29,15 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret',
-  resave: false,
+  resave: true,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: 8 * 60 * 60 * 1000,
     httpOnly: true
   }
 }));
-
-// Trust Render's proxy
-app.set('trust proxy', 1);
 
 // Auth middleware
 function requireAuth(req, res, next) {
