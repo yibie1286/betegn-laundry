@@ -388,12 +388,6 @@ function renderOrdersTable(orders) {
           <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.order_id}')">🗑️</button>
         </div>
       </td>
-    </tr>`;v class="action-btns">
-          <button class="btn btn-sm btn-outline" onclick="openStatusModal('${o.order_id}')">✏️</button>
-          <button class="btn btn-sm btn-primary" onclick="openReceipt('${o.order_id}')">🧾</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.order_id}')">🗑️</button>
-        </div>
-      </td>
     </tr>`;
   }).join('');
 }
@@ -549,12 +543,6 @@ async function loadCustomers() {
       <td data-label="Orders">${c.total_orders}</td>
       <td data-label="Total Paid">${Number(c.total_paid).toLocaleString()} ETB</td>
       <td data-label="Action"><button class="btn btn-sm btn-outline" onclick="openHistory('${c.customer_id}')">📋 History</button></td>
-    </tr>`).join('');/td>
-      <td>${c.address || '—'}</td>
-      <td>${c.registration_date || '—'}</td>
-      <td>${c.total_orders}</td>
-      <td>${Number(c.total_paid).toLocaleString()} ETB</td>
-      <td><button class="btn btn-sm btn-outline" onclick="openHistory('${c.customer_id}')">📋 History</button></td>
     </tr>`).join('');
 }
 
