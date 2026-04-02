@@ -19,6 +19,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupItemListeners();
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarBackdrop').classList.toggle('active');
+  });
+  document.getElementById('sidebarBackdrop').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarBackdrop').classList.remove('active');
   });
   await checkSession();
 });
@@ -105,7 +110,8 @@ function setupNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
-      const section = link.dataset.section;
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarBackdrop').classList.remove('active');
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       link.classList.add('active');
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -178,15 +184,15 @@ function loadDashboardLocal() {
   document.getElementById('completedOrders').textContent = completed;
   document.getElementById('pendingOrders').textContent   = pending;
   document.getElementById('dailyIncome').textContent     = `${dailyIncome.toLocaleString()} ETB`;
-  renderRecentTable(orders.slice(-8).reverse());
-}
-
-function renderRecentTable(orders) {
-  const tbody = document.getElementById('recentTableBody');
-  if (!orders.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No orders yet</td></tr>'; return; }
   tbody.innerHTML = orders.map(o => `
     <tr>
-      <td><strong>${o.order_id}</strong></td>
+      <td data-label="Order ID"><strong>${o.order_id}</strong></td>
+      <td data-label="Customer">${o.customer_name || o.custName || ''}</td>
+      <td data-label="Phone">${o.phone || ''}</td>
+      <td data-label="Items">${o.item_count || (o.items ? o.items.length : 0)}</td>
+      <td data-label="Total">${Number(o.total_amount || o.grandTotal || 0).toLocaleString()} ETB</td>
+      <td data-label="Status">${statusBadge(o.status)}</td>
+    </tr>`).join('');.order_id}</strong></td>
       <td>${o.customer_name || o.custName || ''}</td>
       <td>${o.phone || ''}</td>
       <td>${o.item_count || (o.items ? o.items.length : 0)}</td>
@@ -365,24 +371,24 @@ async function loadOrders() {
 
 function renderOrdersTable(orders) {
   const tbody = document.getElementById('ordersTableBody');
-  if (!orders.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found</td></tr>'; return; }
-  tbody.innerHTML = orders.map(o => {
-    const total = Number(o.total_amount || o.grandTotal || 0);
-    const paid  = Number(o.paid_amount || 0);
-    const bal   = Number(o.balance || (total - paid));
-    const overdue = o.delivery_date && new Date(o.delivery_date) < new Date() && o.status !== 'Delivered';
     return `<tr>
-      <td><strong>${o.order_id}</strong></td>
-      <td>${o.customer_name || ''}</td>
-      <td>${o.phone || ''}</td>
-      <td>${o.item_count || (o.items ? o.items.length : '—')}</td>
-      <td>${total.toLocaleString()} ETB</td>
-      <td>${paid.toLocaleString()} ETB</td>
-      <td style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
-      <td style="color:${overdue ? 'var(--danger)' : ''}">${o.delivery_date || '—'}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td>
+      <td data-label="Order ID"><strong>${o.order_id}</strong></td>
+      <td data-label="Customer">${o.customer_name || ''}</td>
+      <td data-label="Phone">${o.phone || ''}</td>
+      <td data-label="Items">${o.item_count || (o.items ? o.items.length : '—')}</td>
+      <td data-label="Total">${total.toLocaleString()} ETB</td>
+      <td data-label="Paid">${paid.toLocaleString()} ETB</td>
+      <td data-label="Balance" style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
+      <td data-label="Delivery" style="color:${overdue ? 'var(--danger)' : ''}">${o.delivery_date || '—'}</td>
+      <td data-label="Status">${statusBadge(o.status)}</td>
+      <td data-label="Actions">
         <div class="action-btns">
+          <button class="btn btn-sm btn-outline" onclick="openStatusModal('${o.order_id}')">✏️</button>
+          <button class="btn btn-sm btn-primary" onclick="openReceipt('${o.order_id}')">🧾</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.order_id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;v class="action-btns">
           <button class="btn btn-sm btn-outline" onclick="openStatusModal('${o.order_id}')">✏️</button>
           <button class="btn btn-sm btn-primary" onclick="openReceipt('${o.order_id}')">🧾</button>
           <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.order_id}')">🗑️</button>
@@ -453,17 +459,17 @@ async function loadPayments() {
 
 function renderPaymentsTable(orders) {
   const tbody = document.getElementById('paymentsTableBody');
-  if (!orders.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No payment records</td></tr>'; return; }
-  tbody.innerHTML = orders.map(o => {
-    const total = Number(o.total_amount || o.grandTotal || 0);
-    const paid  = Number(o.paid_amount || 0);
-    const bal   = Number(o.balance || Math.max(0, total - paid));
-    const payStatus = bal <= 0 ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
     return `<tr>
-      <td><strong>${o.order_id}</strong></td>
-      <td>${o.customer_name || ''}</td>
-      <td>${total.toLocaleString()} ETB</td>
-      <td>${paid.toLocaleString()} ETB</td>
+      <td data-label="Order ID"><strong>${o.order_id}</strong></td>
+      <td data-label="Customer">${o.customer_name || ''}</td>
+      <td data-label="Total">${total.toLocaleString()} ETB</td>
+      <td data-label="Paid">${paid.toLocaleString()} ETB</td>
+      <td data-label="Balance" style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
+      <td data-label="Pay Status">${payBadge(payStatus)}</td>
+      <td data-label="Action">
+        ${bal > 0 ? `<button class="btn btn-sm btn-success" onclick="openPayModal('${o.order_id}', ${total}, ${paid}, ${bal})">💳 Pay</button>` : '<span style="color:var(--success)">✅ Paid</span>'}
+      </td>
+    </tr>`;{paid.toLocaleString()} ETB</td>
       <td style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
       <td>${payBadge(payStatus)}</td>
       <td>
@@ -534,16 +540,16 @@ async function loadCustomers() {
   try {
     const customers = await apiFetch('/api/customers');
     renderCustomersTable(customers);
-  } catch (err) { showToast('Failed to load customers: ' + err.message, 'error'); }
-}
-
-function renderCustomersTable(customers) {
-  const tbody = document.getElementById('customersTableBody');
-  if (!customers.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No customers yet</td></tr>'; return; }
   tbody.innerHTML = customers.map(c => `
     <tr>
-      <td><strong>${c.customer_name}</strong></td>
-      <td>${c.phone}</td>
+      <td data-label="Name"><strong>${c.customer_name}</strong></td>
+      <td data-label="Phone">${c.phone}</td>
+      <td data-label="Address">${c.address || '—'}</td>
+      <td data-label="Registered">${c.registration_date || '—'}</td>
+      <td data-label="Orders">${c.total_orders}</td>
+      <td data-label="Total Paid">${Number(c.total_paid).toLocaleString()} ETB</td>
+      <td data-label="Action"><button class="btn btn-sm btn-outline" onclick="openHistory('${c.customer_id}')">📋 History</button></td>
+    </tr>`).join('');/td>
       <td>${c.address || '—'}</td>
       <td>${c.registration_date || '—'}</td>
       <td>${c.total_orders}</td>
@@ -719,20 +725,20 @@ async function performSearch() {
   } catch (err) { showToast('Search failed: ' + err.message, 'error'); }
 }
 
-function renderSearchResults(results) {
-  const tbody = document.getElementById('searchResults');
-  if (!results.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No results found</td></tr>'; return; }
-  tbody.innerHTML = results.map(o => {
-    const total = Number(o.total_amount || o.grandTotal || 0);
-    const bal   = Number(o.balance || 0);
     return `<tr>
-      <td><strong>${o.order_id}</strong></td>
-      <td>${o.customer_name || ''}</td>
-      <td>${o.phone || ''}</td>
-      <td>${total.toLocaleString()} ETB</td>
-      <td style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
-      <td>${statusBadge(o.status)}</td>
-      <td>
+      <td data-label="Order ID">${o.order_id}</td>
+      <td data-label="Customer">${o.customer_name || ''}</td>
+      <td data-label="Phone">${o.phone || ''}</td>
+      <td data-label="Total">${total.toLocaleString()} ETB</td>
+      <td data-label="Balance" style="color:${bal > 0 ? 'var(--danger)' : 'var(--success)'}">${bal.toLocaleString()} ETB</td>
+      <td data-label="Status">${statusBadge(o.status)}</td>
+      <td data-label="Actions">
+        <div class="action-btns">
+          <button class="btn btn-sm btn-outline" onclick="openStatusModal('${o.order_id}')">✏️</button>
+          <button class="btn btn-sm btn-primary" onclick="openReceipt('${o.order_id}')">🧾</button>
+        </div>
+      </td>
+    </tr>`;
         <div class="action-btns">
           <button class="btn btn-sm btn-outline" onclick="openStatusModal('${o.order_id}')">✏️</button>
           <button class="btn btn-sm btn-primary" onclick="openReceipt('${o.order_id}')">🧾</button>
