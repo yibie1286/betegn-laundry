@@ -371,6 +371,12 @@ async function loadOrders() {
 
 function renderOrdersTable(orders) {
   const tbody = document.getElementById('ordersTableBody');
+  if (!orders.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No orders found</td></tr>'; return; }
+  tbody.innerHTML = orders.map(o => {
+    const total = Number(o.total_amount || o.grandTotal || 0);
+    const paid  = Number(o.paid_amount || 0);
+    const bal   = Number(o.balance || Math.max(0, total - paid));
+    const overdue = o.delivery_date && new Date(o.delivery_date) < new Date() && o.status !== 'Delivered';
     return `<tr>
       <td data-label="Order ID"><strong>${o.order_id}</strong></td>
       <td data-label="Customer">${o.customer_name || ''}</td>
