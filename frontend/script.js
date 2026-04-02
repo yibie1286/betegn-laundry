@@ -198,12 +198,6 @@ function loadDashboardLocal() {
       <td data-label="Items">${o.item_count || (o.items ? o.items.length : 0)}</td>
       <td data-label="Total">${Number(o.total_amount || o.grandTotal || 0).toLocaleString()} ETB</td>
       <td data-label="Status">${statusBadge(o.status)}</td>
-    </tr>`).join('');.order_id}</strong></td>
-      <td>${o.customer_name || o.custName || ''}</td>
-      <td>${o.phone || ''}</td>
-      <td>${o.item_count || (o.items ? o.items.length : 0)}</td>
-      <td>${Number(o.total_amount || o.grandTotal || 0).toLocaleString()} ETB</td>
-      <td>${statusBadge(o.status)}</td>
     </tr>`).join('');
 }
 
